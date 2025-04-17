@@ -1,0 +1,9 @@
+MOTIF_INDEX	MOTIF_SOURCE	MOTIF_ID	ALT_ID	CONSENSUS	WIDTH	SITES	E-VALUE	E-VALUE_SOURCE	MOST_SIMILAR_MOTIF_SOURCE	MOST_SIMILAR_MOTIF	URL
+1	MEME	VCCAYGTG	MEME-1	VCCAYGTG	8	142	1.6e-031	MEME	db/motif_databases/MOUSE/HOCOMOCOv11_core_MOUSE_mono_meme_format.meme	MYC_MOUSE.H11MO.0.A	http://hocomoco.autosome.ru/motif/MYC_MOUSE.H11MO.0.A
+2	MEME	AAAAAMARAAAAMAA	MEME-2	AAAAAMARAAAAMAA	15	25	5.1e-018	MEME	db/motif_databases/MOUSE/HOCOMOCOv11_core_MOUSE_mono_meme_format.meme	FOXJ3_MOUSE.H11MO.0.A	http://hocomoco.autosome.ru/motif/FOXJ3_MOUSE.H11MO.0.A
+3	MEME	GGSGGGGGGGGGGAG	MEME-3	GGSGGGGGGGGGGAG	15	44	1.1e-008	MEME	db/motif_databases/MOUSE/HOCOMOCOv11_core_MOUSE_mono_meme_format.meme	SP5_MOUSE.H11MO.0.C	http://hocomoco.autosome.ru/motif/SP5_MOUSE.H11MO.0.C
+4	STREME	1-CAGGAA	STREME-1	CAGGAA	6	56	2.7e-002	STREME	db/motif_databases/MOUSE/HOCOMOCOv11_core_MOUSE_mono_meme_format.meme	ETV2_MOUSE.H11MO.0.A	http://hocomoco.autosome.ru/motif/ETV2_MOUSE.H11MO.0.A
+
+# MEME-ChIP (Motif Analysis of Large Nucleotide Datasets): Version 5.5.7 released on Wed Jun 19 13:59:04 2024 -0700
+# The format of this file is described at https://meme-suite.org/meme//doc/meme-chip-output-format.html
+# meme-chip -oc . -time 240 -ccut 100 -dna -order 2 -minw 6 -maxw 15 -db db/motif_databases/MOUSE/HOCOMOCOv11_core_MOUSE_mono_meme_format.meme -meme-mod zoops -meme-nmotifs 3 -meme-searchsize 100000 -streme-pvt 0.05 -streme-align center -streme-totallength 4000000 -centrimo-score 5.0 -centrimo-ethresh 10.0 Peaks1.fa
