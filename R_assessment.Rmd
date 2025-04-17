@@ -1,0 +1,296 @@
+---
+title: "Advanced Bioinformatics 2023 assessment"
+author: '24002434'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## **General R/Rstudio assessment**
+
+### Task 1
+
+```{r}
+sum(5:55)
+```
+
+### Task 2
+
+```{r}
+sumfun <- function(n) sum(5:n)
+sumfun(10)
+sumfun(20)
+sumfun(100)
+```
+
+### Task 3
+
+```{r}
+#define the length for the first 12 entries of the Fibonacci series
+fib<-numeric(length=12)
+#the first two stepsare 1, 1.
+fib[1]<-1
+fib[2]<-1
+for(n in 3:12){
+  fib[n]<-fib[n-1]+fib[n-2]
+}
+print(fib)
+```
+
+### Task 4
+
+```{r}
+library("ggplot2")
+data("mtcars")
+mtcars|>
+  ggplot(
+    aes(x=as.factor(gear),y=mpg,fill=as.factor(gear))
+  )+
+  geom_boxplot()+
+  labs(
+    x = "Number of Gears",
+    y = "Miles per Gallon"
+  )
+```
+
+### Task 5
+
+The fitted slope is 3.9324, and the intercept is -17.5791.
+
+The standard errors of slope and intercept are 0.4155 and 6.7584.
+
+```{r}
+data(cars)
+#the breaking distance in the variable dist
+lm <- lm(dist ~ speed, data=cars)
+summary(lm)
+```
+
+The units for speed ad dist are mph and ft.
+
+```{r}
+#the units used for the variables in the dataset
+?cars
+```
+
+![](images/截屏2025-04-14 21.07.55.png)
+
+### Task 6
+
+```{r}
+data(cars)
+cars|>
+  ggplot(
+    aes(x=speed,y=dist)
+  )+
+  geom_point()+
+  geom_smooth(method = "lm")#use the linear fit
+```
+
+### Task 7
+
+Distance equals reaction distance plus breaking distance, and reaction distance equals speed multiplied by reaction time.
+
+The average reaction time is the slope of speed 0.62128.
+
+The results seem reasonable, because typical reaction time is about 1.5 seconds.
+
+```{r}
+data(cars)
+#convert the unit of speed from mile/h to ft/s, to calculate time in seconds
+cars$speed=1.47*cars$speed
+
+cars$speed_sq=cars$speed^2
+lm2 <- lm(dist~speed+speed_sq,data=cars)
+summary(lm2)
+```
+
+```{r}
+cars|>
+  ggplot(
+    aes(x=speed,y=dist)
+  )+
+  geom_point()+
+  geom_line(
+    aes(y=predict(lm2))
+  )
+```
+
+## **RNA-seq assessment**
+
+### Task 8
+
+```{r}
+data_RNAcounts<-read.csv("LMS_RNAseq_short-master-2023-final/course/exercises/data/exercise1_counts.csv",row.names = 1)
+data_RNAinfo<-read.table("LMS_RNAseq_short-master-2023-final/course/exercises/data/exercise1_sample_description.info",header=TRUE)
+```
+
+### Task 9
+
+```{r}
+col_data<-data.frame(sample=data_RNAinfo$sample,
+                     condition=data_RNAinfo$condition,
+                     batch=data_RNAinfo$batch)
+#store data as factors
+col_data$sample<-as.factor(col_data$sample)
+col_data$condition<-as.factor(col_data$condition)
+col_data$batch<-as.factor(col_data$batch)
+#check dimensions
+ncol(data_RNAcounts)==nrow(col_data)
+```
+
+### Task 10
+
+```{r}
+#construct DESeqDataSet object
+library("DESeq2")
+#build DESeq dataset
+dds<-DESeqDataSetFromMatrix(countData = data_RNAcounts,
+                            colData = col_data,
+                            design = ~condition)
+#apply DESeq normalization
+dds <- DESeq(dds)
+```
+
+### Task 11
+
+rlog transformation
+
+```{r}
+#regularized log transformation
+rlg <- rlog(dds)
+#get rlog in count format
+rlg_counts <- assay(rlg)
+```
+
+VST transformation
+
+```{r}
+#VST transformation
+vst <- varianceStabilizingTransformation(dds)
+#get vst in count format
+vst_counts <- assay(vst)
+```
+
+### Task 12
+
+```{r}
+#get dds normalized counts
+dds_counts <- counts(dds, normalized = TRUE)
+#get normalized counts - 40 higher values
+select <- order(rowMeans(dds_counts), decreasing = TRUE)[1:40]
+```
+
+```{r}
+library("pheatmap")
+#heatmap of the rlog transformed data
+pheatmap(assay(rlg)[select, ])
+#heatmap of the vst transformed data
+pheatmap(assay(vst)[select, ])
+```
+
+### Task 13
+
+```{r}
+#compute SDM from rlog transformed data
+sample_dist <- dist(t(assay(rlg)))
+#get SDM in matrix form
+sdm <- as.matrix(sample_dist)
+
+library("RColorBrewer")
+
+#add row names for clear plot
+rownames(sdm) <- rlg$Group
+colnames(sdm) <- NULL
+
+#add colors
+colors <- colorRampPalette(rev(brewer.pal(9, "Blues")))(255)
+
+#plot heatmap
+pheatmap(sdm,
+         clustering_distance_rows = sample_dist,
+         clustering_distance_cols = sample_dist,
+         col = colors)
+```
+
+### Task 14
+
+The % significance values of first two principal components are 70% and 13%.
+
+```{r}
+#PCA plot using rlog method
+plotPCA(rlg, intgroup = "condition")
+```
+
+### Task 15
+
+The % significance values of first two principal components in PCA plot using VST method are 69% and 14%, which is almost the same as the values in PCA plot using rlog method.
+
+The distribution of samples in the two plots is also very similar.
+
+```{r}
+#PCA plot using VST method
+plotPCA(vst, intgroup = "condition")
+```
+
+## **ChIP-seq assessment**
+
+### Task 16
+
+```{r}
+#read in the two Myc Mel peakset replicates
+PeakSet1<-ChIPQC:::GetGRanges("LMS_ChIPseq_short-master-2023-final/course/data/MacsPeaks/mycmelrep1_peaks.xls", sep="\t", simple=F)
+PeakSet2<-ChIPQC:::GetGRanges("LMS_ChIPseq_short-master-2023-final/course/data/MacsPeaks/mycmelrep2_peaks.xls", sep="\t", simple=F)
+
+#create the common peakset
+allPeaks <- c(PeakSet1,PeakSet2)
+allPeaksReduced <- reduce(allPeaks)
+commonPeaks <- allPeaksReduced[allPeaksReduced %over% PeakSet1 
+                               & allPeaksReduced %over% PeakSet2]
+```
+
+### Task 17
+
+```{r}
+#rank by fold enrichment
+PeakSet1 <- PeakSet1[order(PeakSet1$fold_enrichment, decreasing = TRUE)]
+PeakSet2 <- PeakSet2[order(PeakSet2$fold_enrichment, decreasing = TRUE)]
+#select the top 500 peaks
+PeakSet1<-PeakSet1[1:500]
+PeakSet2<-PeakSet2[1:500]
+#resize these peaks to 200bp around centre
+PeakSet1 <- resize(PeakSet1,200,fix="center")
+PeakSet2 <- resize(PeakSet2,200,fix="center")
+```
+
+### Task 18
+
+```{r}
+library("BSgenome")
+library("BSgenome.Mmusculus.UCSC.mm9")
+genome <- BSgenome.Mmusculus.UCSC.mm9
+seqlevelsStyle(PeakSet1) <- "UCSC"
+seqlevelsStyle(PeakSet2) <- "UCSC"
+
+#extract the sequences
+PeaksSequences1 <- getSeq(genome,GRanges(PeakSet1))
+PeaksSequences2 <- getSeq(genome,GRanges(PeakSet2))
+
+#provide names
+names(PeaksSequences1) <- paste0("peak_",seqnames(PeakSet1),"_",
+                                         start(PeakSet1),
+                                         "-",
+                                         end(PeakSet1))
+names(PeaksSequences2) <- paste0("peak_",seqnames(PeakSet2),"_",
+                                         start(PeakSet2),
+                                         "-",
+                                         end(PeakSet2))
+```
+
+```{r}
+#write to FASTA file
+writeXStringSet(PeaksSequences1,file="Peaks1.fa")
+writeXStringSet(PeaksSequences2,file="Peaks2.fa")
+```
